@@ -1,73 +1,60 @@
-# ─────────────────────────────────────────────
-#  mecard — Digital Business Card
-# ─────────────────────────────────────────────
-#  Edit this file and push. GitHub Actions
-#  builds and deploys. See README.md for the
-#  full list of icons and theme options.
-# ─────────────────────────────────────────────
+# Ryan R. Neely III — digital business card
+# Edit this file and push to main to rebuild the card on GitHub Pages.
 
-# ── Identity ──────────────────────────────────
-name: Matt Grau
-title: Assistant Professor
-tagline: Experimental AMO Physics
-organization: Old Dominion University
-department: Department of Physics
+name: Ryan R. Neely III
+title: Professor of Atmospheric Physics
+tagline: Clouds, radar & polar observations
+organization: University of Leeds · NCAS
+department: Institute for Climate and Atmospheric Science
 
-# ── Contact ───────────────────────────────────
-#  Shown as readable text. Leave blank to omit.
-email: mgrau@odu.edu
-phone: "(757) 683-5827"
-website: https://graulab.org
+# Structured name keeps the surname and suffix correct in address books.
+vcardName:
+  family: Neely
+  given: Ryan
+  additional: R.
+  prefix: Prof.
+  suffix: III
 
-# ── Profile photo ─────────────────────────────
-#  Local path or URL. Square, ~400×400px.
-#  Omit to fall back to initials.
+# Public professional contact details.
+email: ryan.neely@ncas.ac.uk
+phone: "+44 113 343 6417"
+website: https://environment.leeds.ac.uk/see/staff/1447/dr-ryan-neely-iii
+websiteLabel: University of Leeds profile
 photo: photo.jpg
 
-# ── Links ─────────────────────────────────────
-#  Icon buttons. See README for all icon names.
 links:
   - label: Google Scholar
-    url: https://scholar.google.com/citations?user=lnh9kdIAAAAJ
+    url: https://scholar.google.com/citations?user=zK6Ngs0AAAAJ
     icon: scholar
-
-  - label: CV
-    url: https://mgrau.github.io/cv/cv.pdf
-    icon: file
-
+  - label: ORCID
+    url: https://orcid.org/0000-0003-4560-4812
+    icon: orcid
+  - label: NCAS profile
+    url: https://people.ncas.ac.uk/people/view/337
+    icon: globe
   - label: GitHub
-    url: https://github.com/mgrau
+    url: https://github.com/rrniii
     icon: github
 
-  - label: ORCID
-    url: https://orcid.org/0000-0002-2684-6923
-    icon: orcid
+# QR and Share point at the published card.
+url: https://rrniii.github.io/mecard/
 
-# ── Card URL ──────────────────────────────────
-#  Where the card is hosted. The QR code encodes
-#  this, so it must match your Pages URL.
-url: https://mgrau.github.io/mecard
-
-# ── Theme ─────────────────────────────────────
-#  Three background bands, top-left to
-#  bottom-right, plus two accents.
 theme:
-  dark: "#1e1e22"        # Top band — volcanic ash
-  mid: "#2a3330"         # Middle band — gray-green
-  light: "#1b4742"       # Bottom band — deep teal
-  accent: "#5b9eb8"      # Links and icons — glacier blue
-  pop: "#b34d3a"         # Save Contact — lava red
-  page: "#131315"        # Page behind the card — obsidian
-  text: "#fbf9f6"        # Foreground text
+  dark: "#101e2b"        # Polar night
+  mid: "#183746"         # Deep ice
+  light: "#24586a"       # Glacier blue
+  accent: "#9edbe9"      # Ice blue
+  pop: "#3aaeb5"         # Sea green
+  page: "#0a131e"
+  text: "#f5fbff"
 
-# ── Options ───────────────────────────────────
 options:
-  glint: false           # Light sweep across the card
-  waves: true            # Animate the band boundaries
-  qr: true               # Show the QR code
-  saveContact: true      # Show the Save Contact button
-  share: true            # Show Share (only where the device supports it)
-  pwa: true              # Installable to the home screen, works offline
+  glint: false
+  waves: true
+  qr: true
+  saveContact: true
+  share: true
+  pwa: true
   qrLabel: Scan to connect
   saveLabel: Save Contact
   shareLabel: Share

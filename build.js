@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, realpathSync, statSync } from "fs";
 import { parse } from "yaml";
 import QRCode from "qrcode";
-import { extname, join } from "path";
+import { extname, join, resolve, sep } from "path";
 import { createHash } from "crypto";
 
 const OUT = "dist";
@@ -127,44 +127,68 @@ const qrSvg = await QRCode.toString(config.url, {
 
 // ── vCard ────────────────────────────────────────────────────
 function foldLine(line, maxLen = 75) {
-  if (line.length <= maxLen) return line;
-  let result = line.slice(0, maxLen);
-  let pos = maxLen;
-  while (pos < line.length) {
-    result += "\r\n " + line.slice(pos, pos + maxLen - 1);
-    pos += maxLen - 1;
+  const folded = [];
+  let current = "";
+  let bytes = 0;
+  // vCard limits physical lines to 75 octets, without splitting UTF-8 characters.
+  for (const character of line) {
+    const size = Buffer.byteLength(character, "utf8");
+    if (bytes + size > maxLen) {
+      folded.push(current);
+      current = " ";
+      bytes = 1;
+    }
+    current += character;
+    bytes += size;
   }
-  return result;
+  folded.push(current);
+  return folded.join("\r\n");
+}
+
+function escVCard(value) {
+  return String(value)
+    .replace(/\\/g, "\\\\")
+    .replace(/\r\n|\r|\n/g, "\\n")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,");
 }
 
 function buildVCard() {
   const parts = config.name.split(/\s+/);
   const lastName = parts.length > 1 ? parts.slice(-1)[0] : parts[0];
   const firstName = parts.length > 1 ? parts.slice(0, -1).join(" ") : "";
+  const name = config.vcardName || {};
+  const structuredName = [
+    name.family ?? lastName,
+    name.given ?? firstName,
+    name.additional ?? "",
+    name.prefix ?? "",
+    name.suffix ?? "",
+  ].map(escVCard).join(";");
   const lines = [
     "BEGIN:VCARD",
     "VERSION:3.0",
-    `FN:${config.name}`,
-    `N:${lastName};${firstName};;;`,
+    `FN:${escVCard(config.name)}`,
+    `N:${structuredName}`,
   ];
-  if (config.title) lines.push(`TITLE:${config.title}`);
+  if (config.title) lines.push(`TITLE:${escVCard(config.title)}`);
   if (config.organization) {
     const org = config.department
-      ? `${config.organization};${config.department}`
-      : config.organization;
+      ? `${escVCard(config.organization)};${escVCard(config.department)}`
+      : escVCard(config.organization);
     lines.push(`ORG:${org}`);
   }
-  if (config.email) lines.push(`EMAIL;TYPE=WORK:${config.email}`);
-  if (config.phone) lines.push(`TEL;TYPE=WORK:${config.phone}`);
-  if (config.website) lines.push(`URL:${config.website}`);
+  if (config.email) lines.push(`EMAIL;TYPE=WORK:${escVCard(config.email)}`);
+  if (config.phone) lines.push(`TEL;TYPE=WORK:${escVCard(config.phone)}`);
+  // URI fields retain separators while encoding line breaks that would create properties.
+  const uri = (value) => String(value).replace(/\r/g, "%0D").replace(/\n/g, "%0A");
+  if (config.website) lines.push(`URL:${uri(config.website)}`);
   if (config.url && config.url !== config.website)
-    lines.push(`URL:${config.url}`);
+    lines.push(`URL:${uri(config.url)}`);
   if (photoBase64)
-    lines.push(
-      foldLine(`PHOTO;ENCODING=b;TYPE=${photoMimeType}:${photoBase64}`)
-    );
+    lines.push(`PHOTO;ENCODING=b;TYPE=${photoMimeType}:${photoBase64}`);
   lines.push("END:VCARD");
-  return lines.join("\r\n");
+  return lines.map((line) => foldLine(line)).join("\r\n");
 }
 
 const vcard = buildVCard();
@@ -240,7 +264,7 @@ function buildContactInfo() {
     entries.push({
       href: config.website,
       icon: ICONS.globe,
-      text: config.website.replace(/^https?:\/\//, "").replace(/\/$/, ""),
+      text: config.websiteLabel || config.website.replace(/^https?:\/\//, "").replace(/\/$/, ""),
       external: true,
     });
 
@@ -871,7 +895,7 @@ ${
             title: config.name,
             text: [config.title, config.organization].filter(Boolean).join(" — "),
             url: config.url,
-          })});
+          }).replace(/</g, "\\u003c")});
         } catch (err) {
           // A cancelled share rejects with AbortError; nothing to report
           if (err.name !== 'AbortError') console.error(err);
@@ -941,7 +965,10 @@ function buildManifest() {
 // Cache-first: the card is a fixed snapshot, so a version stamp derived from
 // the content is what retires the old cache after a rebuild.
 function buildServiceWorker(assets, version) {
-  return `const CACHE = 'mecard-${version}';
+  const pathname = new URL(config.url).pathname.replace(/\/+$/, "") || "/";
+  const scope = createHash("sha256").update(pathname).digest("hex").slice(0, 12);
+  return `const CACHE_PREFIX = 'mecard-${scope}-';
+const CACHE = CACHE_PREFIX + '${version}';
 const ASSETS = ${JSON.stringify(assets)};
 
 self.addEventListener('install', (e) => {
@@ -951,7 +978,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -959,7 +986,9 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then((hit) => hit || fetch(e.request).catch(() => caches.match('index.html')))
+    caches.open(CACHE).then((cache) =>
+      cache.match(e.request).then((hit) => hit || fetch(e.request).catch(() => cache.match('index.html')))
+    )
   );
 });
 `;
@@ -1003,6 +1032,7 @@ if (opts.pwa && photoFile && !photoFile.size)
 if (process.argv.includes("--serve")) {
   const { createServer } = await import("http");
   const port = parseInt(process.env.PORT || "3000", 10);
+  const root = realpathSync(OUT);
 
   const TYPES = {
     ".html": "text/html; charset=utf-8",
@@ -1015,12 +1045,24 @@ if (process.argv.includes("--serve")) {
     ".png": "image/png",
   };
 
-  createServer((req, res) => {
-    let name = decodeURIComponent(new URL(req.url, "http://x").pathname).slice(1);
+  const server = createServer((req, res) => {
+    let name;
+    try {
+      name = decodeURIComponent(new URL(req.url, "http://localhost").pathname).slice(1);
+      if (name.includes("\0")) throw new Error("Invalid path");
+    } catch {
+      res.writeHead(400, { "Content-Type": "text/plain" });
+      return res.end("Bad request");
+    }
     if (name === "") name = "index.html";
-    const file = join(OUT, name);
-    // Keep the served path inside dist/
-    if (!file.startsWith(OUT) || !existsSync(file)) {
+    let file;
+    let body;
+    try {
+      file = realpathSync(resolve(root, name));
+      // Real paths also prevent a symlink in dist/ from escaping the served directory.
+      if (!file.startsWith(root + sep) || !statSync(file).isFile()) throw new Error("Not a served file");
+      body = readFileSync(file);
+    } catch {
       res.writeHead(404, { "Content-Type": "text/plain" });
       return res.end("Not found");
     }
@@ -1028,6 +1070,7 @@ if (process.argv.includes("--serve")) {
       "Content-Type": TYPES[extname(name).toLowerCase()] || "application/octet-stream",
       "Cache-Control": "no-store",
     });
-    res.end(readFileSync(file));
-  }).listen(port, () => console.log(`\n  → http://localhost:${port}\n`));
+    res.end(body);
+  });
+  server.listen(port, "127.0.0.1", () => console.log(`\n  → http://127.0.0.1:${server.address().port}\n`));
 }

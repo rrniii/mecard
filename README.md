@@ -1,4 +1,10 @@
-# mecard
+# Ryan R. Neely III — mecard
+
+Ryan's digital business card: **https://rrniii.github.io/mecard/**
+
+Personalised fork of [mgrau/mecard](https://github.com/mgrau/mecard), with a polar-blue theme, public professional portrait, Leeds/NCAS contact details, Google Scholar, ORCID and GitHub links. Edit `config.yaml` to update the card; a push to `main` rebuilds and publishes it.
+
+The profile and contact details were checked against the [University of Leeds profile](https://environment.leeds.ac.uk/see/staff/1447/dr-ryan-neely-iii) and [NCAS profile](https://people.ncas.ac.uk/people/view/337) on 9 October 2026. The portrait comes from the NCAS profile. Only public professional information is included.
 
 A digital business card. Edit one YAML file, get a single self-contained HTML page — show it on your phone, and anyone who scans the QR code gets the same card on theirs.
 
@@ -7,17 +13,17 @@ Photo, QR code, and contact file are all inlined, so the output is one HTML file
 ## Setup
 
 ```bash
-git clone https://github.com/<you>/mecard.git
+git clone https://github.com/rrniii/mecard.git
 cd mecard
-npm install
-cp config.example.yaml config.yaml
+npm ci
 ```
 
 Edit `config.yaml`, add a square `photo.jpg` (~400×400px), then:
 
 ```bash
-npm run dev     # build and serve at localhost:3000
-npm run build   # write index.html only
+npm run dev     # build and serve at http://127.0.0.1:3000
+npm run build   # write the card and PWA assets into dist/
+npm test        # contact, cache and local-server regression checks
 ```
 
 ## Deploy to GitHub Pages
@@ -44,10 +50,25 @@ Set `url:` in `config.yaml` to that address. The QR code encodes it, so if they 
 | `email` | Shown as text, tap to send |
 | `phone` | Shown as text, tap to call |
 | `website` | Shown as text, opens in a new tab |
+| `websiteLabel` | Optional readable label for a long website URL |
+| `vcardName` | Optional structured address-book name; see below |
 | `photo` | Local path or URL. Omit to show initials instead |
 | `url` | Required. Where the card is hosted — encoded into the QR code |
 
 Any of `email`, `phone`, `website`, and `photo` can be left out.
+
+For names with a suffix, supply the address-book fields explicitly:
+
+```yaml
+vcardName:
+  family: Neely
+  given: Ryan
+  additional: R.
+  prefix: Prof.
+  suffix: III
+```
+
+The displayed name stays in `name`. The downloaded contact keeps `Neely` as the surname and `III` as the suffix.
 
 ### Links
 
