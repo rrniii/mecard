@@ -2,9 +2,9 @@
 
 Ryan's digital business card: **https://rrniii.github.io/mecard/**
 
-Personalised fork of [mgrau/mecard](https://github.com/mgrau/mecard), with a polar-cloud backdrop, public professional portrait, Leeds/NCAS contact details, Google Scholar, ORCID and GitHub links. Edit `config.yaml` to update the card; a push to `main` rebuilds and publishes it.
+Personalised fork of [mgrau/mecard](https://github.com/mgrau/mecard), with a polar-cloud backdrop, Ryan's chosen fieldwork portrait, Leeds/NCAS contact details, Google Scholar, ORCID and GitHub links. Edit `config.yaml` to update the card; a push to `main` rebuilds and publishes it.
 
-The profile and contact details were checked against the [University of Leeds profile](https://environment.leeds.ac.uk/see/staff/1447/dr-ryan-neely-iii) and [NCAS profile](https://people.ncas.ac.uk/people/view/337) on 9 October 2026. The portrait comes from the NCAS profile. Only public professional information is included.
+The profile and contact details were checked against the [University of Leeds profile](https://environment.leeds.ac.uk/see/staff/1447/dr-ryan-neely-iii) and [NCAS profile](https://people.ncas.ac.uk/people/view/337) on 9 October 2026. Ryan provided and selected the portrait on 10 October 2026.
 
 A digital business card. Edit one YAML file, get a single self-contained HTML page — show it on your phone, and anyone who scans the QR code gets the same card on theirs.
 
