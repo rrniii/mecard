@@ -65,6 +65,18 @@ const accentRgb = hexToRgb(theme.accent);
 const popRgb = hexToRgb(theme.pop);
 const textRgb = hexToRgb(theme.text);
 
+// Embed the atmospheric backdrop so the card still works as one HTML file.
+let backgroundSrc = null;
+if (config.background) {
+  const mimeTypes = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" };
+  const mime = mimeTypes[extname(config.background).toLowerCase()];
+  if (!mime || !existsSync(config.background)) {
+    console.error("background must point to an existing local PNG, JPEG or WebP image.");
+    process.exit(1);
+  }
+  backgroundSrc = `data:${mime};base64,${readFileSync(config.background).toString("base64")}`;
+}
+
 // ── Process photo ────────────────────────────────────────────
 // Reads intrinsic dimensions straight from the file header so the PWA
 // manifest can declare an accurate icon size without an image library.
@@ -379,7 +391,7 @@ function waveLayer(cfg, fillColor, cls) {
 }
 
 // Back band is the card background; mid and ash stack on top of it
-const layersSvg = [
+const layersSvg = backgroundSrc ? "" : [
   waveLayer(MID, theme.mid, "layer-mid"),
   waveLayer(ASH, theme.dark, "layer-ash"),
 ].join("\n");
@@ -424,6 +436,10 @@ ${
       --text-rgb: ${textRgb};
       --text-muted: rgba(${textRgb}, 0.82);
       --text-dim: rgba(${textRgb}, 0.6);
+${backgroundSrc ? `      --atmosphere-image: url("${backgroundSrc}");
+      --text-muted: rgba(${textRgb}, 0.9);
+      --text-dim: rgba(${textRgb}, 0.8);
+` : ""}
     }
 
     body {
@@ -436,6 +452,10 @@ ${
       background:
         radial-gradient(ellipse at 50% 35%, rgba(${accentRgb}, 0.03) 0%, transparent 55%),
         var(--page);
+${backgroundSrc ? `      background-image: linear-gradient(160deg, rgba(5, 17, 29, 0.84), rgba(13, 38, 52, 0.78)), var(--atmosphere-image);
+      background-size: cover;
+      background-position: center;
+` : ""}
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -450,6 +470,10 @@ ${
       border-radius: 26px;
       overflow: hidden;
       background: var(--teal);
+${backgroundSrc ? `      background-image: linear-gradient(180deg, rgba(6, 20, 32, 0.22) 0%, rgba(6, 20, 32, 0.68) 26%, rgba(6, 20, 32, 0.74) 56%, rgba(6, 20, 32, 0.38) 100%), var(--atmosphere-image);
+      background-size: cover;
+      background-position: center;
+` : ""}
       box-shadow:
         0 1px 1px rgba(255, 255, 255, 0.09) inset,
         0 40px 80px -20px rgba(0, 0, 0, 0.7),
@@ -708,6 +732,8 @@ ${
       margin: 0 auto;
       padding: 13px;
       background: linear-gradient(155deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.025));
+${backgroundSrc ? `      background: rgba(7, 24, 37, 0.96);
+` : ""}
       border-radius: 19px;
       border: 1px solid rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(8px);
