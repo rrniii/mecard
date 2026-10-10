@@ -452,7 +452,7 @@ ${backgroundSrc ? `      --atmosphere-image: url("${backgroundSrc}");
       background:
         radial-gradient(ellipse at 50% 35%, rgba(${accentRgb}, 0.03) 0%, transparent 55%),
         var(--page);
-${backgroundSrc ? `      background-image: linear-gradient(160deg, rgba(5, 17, 29, 0.84), rgba(13, 38, 52, 0.78)), var(--atmosphere-image);
+${backgroundSrc ? `      background-image: linear-gradient(160deg, rgba(10, 12, 18, 0.70), rgba(18, 18, 23, 0.64)), var(--atmosphere-image);
       background-size: cover;
       background-position: center;
 ` : ""}
@@ -470,7 +470,7 @@ ${backgroundSrc ? `      background-image: linear-gradient(160deg, rgba(5, 17, 2
       border-radius: 26px;
       overflow: hidden;
       background: var(--teal);
-${backgroundSrc ? `      background-image: linear-gradient(180deg, rgba(6, 20, 32, 0.22) 0%, rgba(6, 20, 32, 0.68) 26%, rgba(6, 20, 32, 0.74) 56%, rgba(6, 20, 32, 0.38) 100%), var(--atmosphere-image);
+${backgroundSrc ? `      background-image: linear-gradient(180deg, rgba(14, 15, 20, 0.16) 0%, rgba(14, 15, 20, 0.68) 26%, rgba(14, 15, 20, 0.72) 56%, rgba(14, 15, 20, 0.64) 100%), var(--atmosphere-image);
       background-size: cover;
       background-position: center;
 ` : ""}
